@@ -452,14 +452,13 @@ if (typeof document !== 'undefined') (function () {
   /* ---------- share ---------- */
 
   function shareText() {
-    const best = bestRun();
-    const rating = rate(best, optimal);
+    const rating = rate(bestRun(), optimal);
     const runsUsed = state.runs.length;
     const lines = [
       `Herded No. ${day + 1} ${'\u{1F43E}'.repeat(rating.paws)}`,
       rating.pct >= 100
-        ? `The perfect run: ${best}, in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`
-        : `${best} of a perfect ${optimal} (${rating.pct}%), in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`,
+        ? `The perfect run, in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`
+        : `${rating.pct}% of the perfect run, in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`,
       'https://jonezzyboy.github.io/herded/',
     ];
     return lines.join('\n');
