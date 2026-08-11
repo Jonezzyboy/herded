@@ -2,6 +2,7 @@
 
 const {
   generatePuzzle, playLineup, BY_ID, PEN_SIZE, LINE_SIZE,
+  PACK_BY_ID, packForDay,
 } = require('../game.js');
 
 const DAYS = 365 * 3;
@@ -26,6 +27,17 @@ for (let day = 0; day < DAYS; day++) {
   if (new Set(p.pen).size !== p.pen.length) fail(day, 'duplicate animal in the pen');
   for (const id of p.pen) {
     if (!BY_ID[id]) fail(day, `unknown animal ${id}`);
+  }
+
+  const pack = PACK_BY_ID[p.pack];
+  if (!pack) {
+    fail(day, `unknown pack ${p.pack}`);
+  } else {
+    if (pack.id !== packForDay(day).id) fail(day, 'pack does not follow the rotation');
+    const inPack = new Set(pack.animals.map((a) => a.id));
+    for (const id of p.pen) {
+      if (!inPack.has(id)) fail(day, `${id} is not in pack ${pack.id}`);
+    }
   }
 
   const sol = p.solution;

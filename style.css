@@ -151,6 +151,8 @@ main, .masthead, .foot { width: min(640px, 100%); }
   text-transform: uppercase;
 }
 
+.pack-name { color: var(--hay); }
+
 .archive-note {
   margin-top: 10px;
   font-size: 14px;

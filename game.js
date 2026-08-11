@@ -31,13 +31,22 @@ function reverseDigits(n) {
 /* ---------- the roster ----------
    Effects run against { score, stash, nextTimes } plus a context
    { pos, len, prev }. An animal sent through with times > 1 has its
-   effect executed that many times back to back, so doublers compound. */
+   effect executed that many times back to back, so doublers compound.
+
+   Every power reads the score or the shape of the line — where a creature
+   stands, what stands beside it, how many follow. None of them read what
+   the other creatures *are*, which is what keeps the puzzle about order.
+
+   Creatures are grouped into packs and each day draws its pen from one
+   pack, so a day has a single flavour. Packs share the same family of
+   powers at different strengths: the shapes are familiar, the numbers
+   are not, so a Myth day plays differently from a Farmyard one. */
 
 const LINE_SIZE = 5;
 const PEN_SIZE = 7;
 const RUNS = 3;
 
-const ANIMALS = [
+const FARMYARD = [
   { id: 'elephant', emoji: '\u{1F418}', name: 'Elephant',
     power: 'Adds 30 to the score.',
     act(s) { s.score += 30; } },
@@ -76,7 +85,152 @@ const ANIMALS = [
     act(s, ctx) { s.score += 12 * ctx.pos; } },
 ];
 
+const MYTH = [
+  { id: 'dragon', emoji: '\u{1F409}', name: 'Dragon',
+    power: 'Adds 35 to the score.',
+    act(s) { s.score += 35; } },
+  { id: 'hydra', emoji: '\u{1F40D}', name: 'Hydra',
+    power: 'Doubles the score.',
+    act(s) { s.score *= 2; } },
+  { id: 'phoenix', emoji: '\u{1F525}', name: 'Phoenix',
+    power: 'Doubles the score, or trebles it if it leads the line.',
+    act(s, ctx) { s.score *= ctx.pos === 0 ? 3 : 2; } },
+  { id: 'griffin', emoji: '\u{1F985}', name: 'Griffin',
+    power: 'The next creature in line acts twice.',
+    act(s) { s.nextTimes += 1; } },
+  { id: 'echo', emoji: '\u{1F9DA}', name: 'Echo',
+    power: 'Repeats the power of the creature before it.',
+    act(s, ctx) { if (ctx.prev) ctx.prev.act(s, ctx); } },
+  { id: 'sphinx', emoji: '\u{1F981}', name: 'Sphinx',
+    power: 'Adds 12 for every creature after it in line.',
+    act(s, ctx) { s.score += 12 * (ctx.len - 1 - ctx.pos); } },
+  { id: 'ouroboros', emoji: '\u{1F300}', name: 'Ouroboros',
+    power: 'Reverses the digits of the score.',
+    act(s) { s.score = reverseDigits(s.score); } },
+  { id: 'janus', emoji: '\u{1F5FF}', name: 'Janus',
+    power: 'Adds 30 if the score is even, 6 if odd.',
+    act(s) { s.score += s.score % 2 === 0 ? 30 : 6; } },
+  { id: 'atlas', emoji: '\u{1F3DB}\u{FE0F}', name: 'Atlas',
+    power: 'Adds 50 if it leads the line, otherwise 6.',
+    act(s, ctx) { s.score += ctx.pos === 0 ? 50 : 6; } },
+  { id: 'kraken', emoji: '\u{1F419}', name: 'Kraken',
+    power: 'Doubles the score if it ends the line, otherwise adds 10.',
+    act(s, ctx) { if (ctx.pos === ctx.len - 1) s.score *= 2; else s.score += 10; } },
+  { id: 'siren', emoji: '\u{1F9DC}', name: 'Siren',
+    power: "Adds the score's last digit to the score.",
+    act(s) { s.score += s.score % 10; } },
+  { id: 'cerberus', emoji: '\u{1F415}', name: 'Cerberus',
+    power: 'Guards half the score; the guarded half returns after the run.',
+    act(s) { const h = Math.floor(s.score / 2); s.stash += h; s.score -= h; } },
+  { id: 'minotaur', emoji: '\u{1F402}', name: 'Minotaur',
+    power: 'Adds 14 for every creature before it in line.',
+    act(s, ctx) { s.score += 14 * ctx.pos; } },
+];
+
+const ELDRITCH = [
+  { id: 'star-spawn', emoji: '\u{1F30C}', name: 'Star-Spawn',
+    power: 'Adds 40 to the score.',
+    act(s) { s.score += 40; } },
+  { id: 'shoggoth', emoji: '\u{1FAE7}', name: 'Shoggoth',
+    power: 'Doubles the score.',
+    act(s) { s.score *= 2; } },
+  { id: 'the-hollow', emoji: '\u{1F573}\u{FE0F}', name: 'The Hollow',
+    power: 'Halves the score, then adds 90.',
+    act(s) { s.score = Math.floor(s.score / 2) + 90; } },
+  { id: 'beckoner', emoji: '\u{1F441}\u{FE0F}', name: 'The Beckoner',
+    power: 'The next creature in line acts twice.',
+    act(s) { s.nextTimes += 1; } },
+  { id: 'mimic', emoji: '\u{1F3AD}', name: 'Mimic',
+    power: 'Repeats the power of the creature before it.',
+    act(s, ctx) { if (ctx.prev) ctx.prev.act(s, ctx); } },
+  { id: 'watcher', emoji: '\u{1F311}', name: 'Watcher in the Dark',
+    power: 'Adds 14 for every creature after it in line.',
+    act(s, ctx) { s.score += 14 * (ctx.len - 1 - ctx.pos); } },
+  { id: 'the-inverted', emoji: '\u{1F53B}', name: 'The Inverted',
+    power: 'Reverses the digits of the score.',
+    act(s) { s.score = reverseDigits(s.score); } },
+  { id: 'tide-thing', emoji: '\u{1F30A}', name: 'Tide-Thing',
+    power: 'Adds 35 if the score is even, 5 if odd.',
+    act(s) { s.score += s.score % 2 === 0 ? 35 : 5; } },
+  { id: 'herald', emoji: '\u{1F4EF}', name: 'The Herald',
+    power: 'Adds 55 if it leads the line, otherwise 5.',
+    act(s, ctx) { s.score += ctx.pos === 0 ? 55 : 5; } },
+  { id: 'leviathan', emoji: '\u{1F40B}', name: 'Leviathan',
+    power: 'Doubles the score if it ends the line, otherwise adds 12.',
+    act(s, ctx) { if (ctx.pos === ctx.len - 1) s.score *= 2; else s.score += 12; } },
+  { id: 'whisperer', emoji: '\u{1F32B}\u{FE0F}', name: 'The Whisperer',
+    power: "Adds the score's last digit to the score.",
+    act(s) { s.score += s.score % 10; } },
+  { id: 'keeper', emoji: '\u{1F5DD}\u{FE0F}', name: 'The Keeper',
+    power: 'Takes half the score into the dark; it returns after the run.',
+    act(s) { const h = Math.floor(s.score / 2); s.stash += h; s.score -= h; } },
+  { id: 'crawling-mass', emoji: '\u{1F9A0}', name: 'Crawling Mass',
+    power: 'Adds 16 for every creature before it in line.',
+    act(s, ctx) { s.score += 16 * ctx.pos; } },
+];
+
+const CRYPTIDS = [
+  { id: 'bigfoot', emoji: '\u{1F9B6}', name: 'Bigfoot',
+    power: 'Adds 32 to the score.',
+    act(s) { s.score += 32; } },
+  { id: 'jackalope', emoji: '\u{1F430}', name: 'Jackalope',
+    power: 'Doubles the score.',
+    act(s) { s.score *= 2; } },
+  { id: 'mothman', emoji: '\u{1F98B}', name: 'Mothman',
+    power: 'Doubles the score if it goes second in line, otherwise adds 15.',
+    act(s, ctx) { if (ctx.pos === 1) s.score *= 2; else s.score += 15; } },
+  { id: 'chupacabra', emoji: '\u{1F987}', name: 'Chupacabra',
+    power: 'The next creature in line acts twice.',
+    act(s) { s.nextTimes += 1; } },
+  { id: 'doppelganger', emoji: '\u{1F465}', name: 'Doppelgänger',
+    power: 'Repeats the power of the creature before it.',
+    act(s, ctx) { if (ctx.prev) ctx.prev.act(s, ctx); } },
+  { id: 'yeti', emoji: '\u{1F3D4}\u{FE0F}', name: 'Yeti',
+    power: 'Adds 11 for every creature after it in line.',
+    act(s, ctx) { s.score += 11 * (ctx.len - 1 - ctx.pos); } },
+  { id: 'nessie', emoji: '\u{1F995}', name: 'Nessie',
+    power: 'Reverses the digits of the score.',
+    act(s) { s.score = reverseDigits(s.score); } },
+  { id: 'wendigo', emoji: '\u{1F98C}', name: 'Wendigo',
+    power: 'Adds 28 if the score is even, 8 if odd.',
+    act(s) { s.score += s.score % 2 === 0 ? 28 : 8; } },
+  { id: 'thunderbird', emoji: '\u{1F985}', name: 'Thunderbird',
+    power: 'Adds 48 if it leads the line, otherwise 8.',
+    act(s, ctx) { s.score += ctx.pos === 0 ? 48 : 8; } },
+  { id: 'ogopogo', emoji: '\u{1F40A}', name: 'Ogopogo',
+    power: 'Doubles the score if it ends the line, otherwise adds 9.',
+    act(s, ctx) { if (ctx.pos === ctx.len - 1) s.score *= 2; else s.score += 9; } },
+  { id: 'will-o-wisp', emoji: '\u{2728}', name: "Will-o'-the-Wisp",
+    power: "Adds the score's last digit to the score.",
+    act(s) { s.score += s.score % 10; } },
+  { id: 'hobgoblin', emoji: '\u{1F47A}', name: 'Hobgoblin',
+    power: 'Hoards half the score; the hoard comes back after the run.',
+    act(s) { const h = Math.floor(s.score / 2); s.stash += h; s.score -= h; } },
+  { id: 'death-worm', emoji: '\u{1FAB1}', name: 'Death Worm',
+    power: 'Adds 13 for every creature before it in line.',
+    act(s, ctx) { s.score += 13 * ctx.pos; } },
+];
+
+/* ---------- the packs ----------
+   One pack a day, in rotation, so every pack comes round as often as
+   every other and tomorrow is never today's again. */
+
+const PACKS = [
+  { id: 'farmyard', name: 'The Farmyard', animals: FARMYARD },
+  { id: 'myth', name: 'The Myth', animals: MYTH },
+  { id: 'eldritch', name: 'The Eldritch', animals: ELDRITCH },
+  { id: 'cryptids', name: 'The Cryptids', animals: CRYPTIDS },
+];
+
+const ANIMALS = PACKS.flatMap((p) => p.animals);
+
 const BY_ID = Object.fromEntries(ANIMALS.map((a) => [a.id, a]));
+
+const PACK_BY_ID = Object.fromEntries(PACKS.map((p) => [p.id, p]));
+
+function packForDay(dayIndex) {
+  return PACKS[dayIndex % PACKS.length];
+}
 
 /* ---------- running the line ---------- */
 
@@ -144,16 +298,17 @@ function percentBeaten(score, scores) {
    hunting for and rare enough that order genuinely matters. */
 
 function generatePuzzle(dayIndex) {
-  for (let attempt = 0; attempt < 50; attempt++) {
+  const pack = packForDay(dayIndex);
+  for (let attempt = 0; attempt < 200; attempt++) {
     const rng = mulberry32(((dayIndex + 1) * 2654435761) ^ (attempt * 40503 + 17));
     const start = 5 + Math.floor(rng() * 25);
-    const pen = shuffle(ANIMALS.map((a) => a.id), rng).slice(0, PEN_SIZE);
+    const pen = shuffle(pack.animals.map((a) => a.id), rng).slice(0, PEN_SIZE);
     const sol = solve(pen, start);
     const median = sol.scores[sol.scores.length >> 1];
     if (sol.best < 150) continue;
     if (sol.bestCount > 40) continue;
     if (sol.best < median * 1.5) continue;
-    return { day: dayIndex, start, pen, solution: sol };
+    return { day: dayIndex, pack: pack.id, start, pen, solution: sol };
   }
   throw new Error(`no worthy pen for day ${dayIndex}`);
 }
@@ -188,7 +343,8 @@ function rate(best, optimal) {
 
 /* ---------- commendations ----------
    Earnable badges, judged against a summary of a finished day:
-   { played, streak, perfects, pct, paws, runs, beaten, climbing, menagerie }. */
+   { played, streak, perfects, pct, paws, runs, beaten, climbing, menagerie,
+     everyPack }. */
 
 const BADGES = [
   { id: 'first-light', seal: 'No1', name: 'First Light',
@@ -230,6 +386,9 @@ const BADGES = [
   { id: 'sharp-eye', seal: '5×', name: 'Sharp Eye',
     desc: 'Find five perfect runs in all.',
     test: (c) => c.perfects >= 5 },
+  { id: 'well-travelled', seal: `${PACKS.length}p`, name: 'Well Travelled',
+    desc: 'Herd a day from every pack.',
+    test: (c) => c.everyPack },
   { id: 'whole-menagerie', seal: `${ANIMALS.length}`, name: 'The Whole Menagerie',
     desc: `Send all ${ANIMALS.length} animals through the gate.`,
     test: (c) => c.menagerie },
@@ -241,6 +400,7 @@ const BADGES = [
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     ANIMALS, BY_ID, LINE_SIZE, PEN_SIZE, RUNS, BADGES,
+    PACKS, PACK_BY_ID, packForDay,
     mulberry32, shuffle, reverseDigits,
     playLineup, solve, percentBeaten, generatePuzzle, rate,
     todayIndex, msToMidnight, EPOCH,
@@ -258,6 +418,7 @@ if (typeof document !== 'undefined') (function () {
   const STATS_KEY = 'herded-stats-v1';
   const BADGES_KEY = 'herded-badges-v1';
   const SEEN_KEY = 'herded-seen-v1';
+  const PACKS_KEY = 'herded-packs-v1';
   const THEME_KEY = 'herded-theme-v1';
 
   const params = new URLSearchParams(location.search);
@@ -271,6 +432,7 @@ if (typeof document !== 'undefined') (function () {
 
   const puzzle = generatePuzzle(day);
   const optimal = puzzle.solution.best;
+  const pack = PACK_BY_ID[puzzle.pack];
 
   /* ---------- state ---------- */
 
@@ -332,6 +494,14 @@ if (typeof document !== 'undefined') (function () {
     return list;
   }
 
+  function recordPack() {
+    const packs = new Set(load(PACKS_KEY) || []);
+    packs.add(pack.id);
+    const list = [...packs];
+    localStorage.setItem(PACKS_KEY, JSON.stringify(list));
+    return list;
+  }
+
   // Idempotent, so replaying a saved finished day awards nothing twice.
   function awardBadges(stats, rating, beaten) {
     if (archive) return;
@@ -346,6 +516,7 @@ if (typeof document !== 'undefined') (function () {
       beaten,
       climbing: totals.length === RUNS && totals.every((t, i) => i === 0 || t > totals[i - 1]),
       menagerie: recordSeen().length >= ANIMALS.length,
+      everyPack: recordPack().length >= PACKS.length,
     };
     const earned = loadBadges();
     const fresh = [];
@@ -611,7 +782,7 @@ if (typeof document !== 'undefined') (function () {
     const rating = rate(bestRun(), optimal);
     const runsUsed = state.runs.length;
     const lines = [
-      `Herded No. ${day + 1} ${'\u{1F43E}'.repeat(rating.paws)}`,
+      `Herded No. ${day + 1} · ${pack.name} ${'\u{1F43E}'.repeat(rating.paws)}`,
       rating.pct >= 100
         ? `The perfect run, in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`
         : `${rating.pct}% of the perfect run, in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`,
@@ -744,6 +915,7 @@ if (typeof document !== 'undefined') (function () {
   /* ---------- boot ---------- */
 
   $('#issue').textContent = `No. ${day + 1}`;
+  $('#pack').textContent = pack.name;
   const shownDate = archive ? new Date(EPOCH.y, EPOCH.m, EPOCH.d + day) : new Date();
   $('#date').textContent = shownDate.toLocaleDateString(undefined, {
     weekday: 'long', day: 'numeric', month: 'long',

@@ -2,6 +2,7 @@
 
 const {
   playLineup, reverseDigits, rate, percentBeaten,
+  PACKS, ANIMALS, PEN_SIZE, packForDay,
 } = require('../game.js');
 
 let failures = 0;
@@ -11,6 +12,11 @@ function eq(actual, expected, msg) {
     failures++;
     console.error(`FAIL ${msg}: expected ${expected}, got ${actual}`);
   }
+}
+
+function fail(msg) {
+  failures++;
+  console.error(`FAIL ${msg}`);
 }
 
 function total(ids, start) {
@@ -68,6 +74,71 @@ eq(total(['squirrel', 'rabbit'], 15), 23, 'rabbit doubles the unstashed half');
 eq(total(['rabbit', 'squirrel'], 15), 30, 'stash is safe after the double');
 eq(total(['fox', 'squirrel', 'rabbit'], 20), 25, 'fox makes squirrel stash twice');
 eq(total(['squirrel', 'tortoise'], 15), 23, 'the stash is never doubled');
+
+/* packs are well formed and never overlap */
+{
+  const seen = new Set();
+  for (const p of PACKS) {
+    if (p.animals.length < PEN_SIZE) fail(`pack ${p.id} cannot fill a pen of ${PEN_SIZE}`);
+    for (const a of p.animals) {
+      if (seen.has(a.id)) fail(`${a.id} appears in more than one pack`);
+      seen.add(a.id);
+      if (typeof a.act !== 'function') fail(`${a.id} has no effect`);
+      if (!a.name || !a.emoji || !a.power) fail(`${a.id} is missing its card copy`);
+    }
+  }
+  eq(seen.size, ANIMALS.length, 'every creature is reachable from a pack');
+}
+
+/* one pack a day, in rotation */
+eq(packForDay(0).id, PACKS[0].id, 'day one draws the first pack');
+eq(packForDay(PACKS.length).id, PACKS[0].id, 'the rotation comes back round');
+{
+  let repeats = 0;
+  for (let d = 1; d < 200; d++) if (packForDay(d).id === packForDay(d - 1).id) repeats++;
+  eq(repeats, 0, 'no pack follows itself');
+}
+
+/* myth */
+eq(total(['dragon'], 10), 45, 'dragon adds 35');
+eq(total(['phoenix'], 10), 30, 'phoenix leading trebles');
+eq(total(['dragon', 'phoenix'], 10), 90, 'phoenix elsewhere only doubles');
+eq(total(['sphinx', 'dragon'], 10), 57, 'sphinx counts creatures after it');
+eq(total(['ouroboros'], 120), 21, 'ouroboros reverses');
+eq(total(['atlas'], 10), 60, 'atlas leading adds 50');
+eq(total(['dragon', 'atlas'], 10), 51, 'atlas elsewhere adds 6');
+eq(total(['dragon', 'kraken'], 10), 90, 'kraken ending doubles');
+eq(total(['dragon', 'minotaur'], 10), 59, 'minotaur counts creatures before it');
+eq(total(['griffin', 'hydra'], 10), 40, 'griffin makes the hydra double twice');
+eq(total(['hydra', 'echo'], 10), 40, 'echo repeats the hydra');
+{
+  const r = playLineup(['cerberus'], 15);
+  eq(r.steps[0].after, 8, 'cerberus guards half the score');
+  eq(r.total, 15, 'the guarded half comes back');
+}
+
+/* eldritch */
+eq(total(['star-spawn'], 10), 50, 'star-spawn adds 40');
+eq(total(['the-hollow'], 40), 110, 'the hollow halves then adds 90');
+eq(total(['the-hollow'], 300), 240, 'the hollow drags a big score down');
+eq(total(['herald'], 10), 65, 'herald leading adds 55');
+eq(total(['watcher', 'star-spawn'], 10), 64, 'watcher counts creatures after it');
+eq(total(['star-spawn', 'crawling-mass'], 10), 66, 'crawling mass counts creatures before it');
+eq(total(['tide-thing'], 10), 45, 'tide-thing on an even score');
+eq(total(['tide-thing'], 11), 16, 'tide-thing on an odd score');
+eq(total(['whisperer'], 47), 54, 'whisperer adds the last digit');
+
+/* cryptids */
+eq(total(['bigfoot'], 10), 42, 'bigfoot adds 32');
+eq(total(['bigfoot', 'mothman'], 10), 84, 'mothman doubles from second place');
+eq(total(['mothman'], 10), 25, 'mothman anywhere else adds 15');
+eq(total(['bigfoot', 'jackalope', 'mothman'], 10), 99, 'mothman only doubles in second');
+eq(total(['thunderbird'], 10), 58, 'thunderbird leading adds 48');
+eq(total(['yeti', 'bigfoot'], 10), 53, 'yeti counts creatures after it');
+eq(total(['nessie'], 120), 21, 'nessie reverses');
+eq(total(['wendigo'], 10), 38, 'wendigo on an even score');
+eq(total(['bigfoot', 'ogopogo'], 10), 84, 'ogopogo ending doubles');
+eq(total(['bigfoot', 'death-worm'], 10), 55, 'death worm counts creatures before it');
 
 /* step bookkeeping */
 {
