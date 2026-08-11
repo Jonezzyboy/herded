@@ -19,6 +19,86 @@
   --mono: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
+/* ---------- fields (themes) ---------- */
+
+:root[data-theme="meadow"] {
+  color-scheme: light;
+  --field: #dbe6c6;
+  --field-deep: #c8daad;
+  --card: #fbf8ec;
+  --card-shade: #f0ebd7;
+  --ink: #242b18;
+  --ink-soft: #6a7358;
+  --cream-soft: rgba(36, 43, 24, 0.72);
+  --cream-faint: rgba(36, 43, 24, 0.3);
+  --hay: #d3922c;
+  --hay-deep: #a06913;
+  --poppy: #c24f2f;
+  --leaf: #6d8f43;
+}
+
+:root[data-theme="hayloft"] {
+  color-scheme: light;
+  --field: #e7d7a9;
+  --field-deep: #d8c68d;
+  --card: #fdf9ee;
+  --card-shade: #f3ecd8;
+  --ink: #33280f;
+  --ink-soft: #756a4c;
+  --cream-soft: rgba(51, 40, 15, 0.72);
+  --cream-faint: rgba(51, 40, 15, 0.28);
+  --hay: #c9861f;
+  --hay-deep: #96600f;
+  --poppy: #bf5230;
+  --leaf: #7b9450;
+}
+
+:root[data-theme="moorland"] {
+  --field: #2a2434;
+  --field-deep: #1a1622;
+  --card: #f0ecf4;
+  --card-shade: #e2dcea;
+  --ink: #241f2e;
+  --ink-soft: #635b73;
+  --cream-soft: rgba(240, 236, 244, 0.7);
+  --cream-faint: rgba(240, 236, 244, 0.34);
+  --hay: #d9a44c;
+  --hay-deep: #a9761f;
+  --poppy: #d16a7a;
+  --leaf: #8fa870;
+}
+
+:root[data-theme="frostfield"] {
+  color-scheme: light;
+  --field: #dee7e9;
+  --field-deep: #ccd8dc;
+  --card: #fbfcfa;
+  --card-shade: #edf1ec;
+  --ink: #1e2a2c;
+  --ink-soft: #5d6b6d;
+  --cream-soft: rgba(30, 42, 44, 0.72);
+  --cream-faint: rgba(30, 42, 44, 0.28);
+  --hay: #c2841f;
+  --hay-deep: #8f5e10;
+  --poppy: #b8543a;
+  --leaf: #6d8f5e;
+}
+
+:root[data-theme="midnight"] {
+  --field: #0e1113;
+  --field-deep: #05070a;
+  --card: #1b2124;
+  --card-shade: #262e32;
+  --ink: #e7e2d3;
+  --ink-soft: #98a09b;
+  --cream-soft: rgba(231, 226, 211, 0.72);
+  --cream-faint: rgba(231, 226, 211, 0.26);
+  --hay: #e3ac4e;
+  --hay-deep: #b3822c;
+  --poppy: #e0785a;
+  --leaf: #9dbb6d;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 [hidden] { display: none !important; }
@@ -236,7 +316,7 @@ main, .masthead, .foot { width: min(640px, 100%); }
 .animal {
   display: grid;
   grid-template-columns: 44px 1fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   column-gap: 12px;
   align-items: center;
   text-align: left;
@@ -262,7 +342,7 @@ main, .masthead, .foot { width: min(640px, 100%); }
 }
 
 .animal-face {
-  grid-row: 1 / 3;
+  grid-row: 1 / 4;
   font-size: 34px;
   line-height: 1;
 }
@@ -277,6 +357,15 @@ main, .masthead, .foot { width: min(640px, 100%); }
 .animal-power {
   font-size: 13.5px;
   color: var(--ink-soft);
+}
+
+.animal-traits {
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hay-deep);
 }
 
 /* ---------- actions ---------- */
@@ -489,12 +578,160 @@ main, .masthead, .foot { width: min(640px, 100%); }
 
 .clock-line b { font-family: var(--mono); color: var(--hay); font-weight: 600; }
 
+/* ---------- commendations ---------- */
+
+.badges { margin-top: 26px; text-align: center; }
+
+.badges summary {
+  cursor: pointer;
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream-soft);
+  border-bottom: 1px dashed var(--cream-faint);
+  padding-bottom: 2px;
+}
+
+.badges summary::-webkit-details-marker { display: none; }
+
+.badges summary:hover { color: var(--card); border-bottom-color: var(--cream-soft); }
+
+.badge-count { color: var(--hay); }
+
+#badgeList {
+  list-style: none;
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+  text-align: left;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 11px 13px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+}
+
+.badge .seal,
+.toast .seal {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--hay-deep);
+  border: 3px double var(--hay-deep);
+  border-radius: 50%;
+  transform: rotate(-6deg);
+}
+
+.badge:not(.earned) .seal {
+  color: var(--ink-soft);
+  border: 1.5px dashed var(--ink-soft);
+  opacity: 0.5;
+  transform: none;
+}
+
+.badge:not(.earned) .badge-name,
+.badge:not(.earned) .badge-desc { opacity: 0.55; }
+
+.badge-text { display: grid; gap: 2px; }
+
+.badge-name {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.badge-desc {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
+.badge.fresh { box-shadow: 0 0 0 2px var(--hay), 0 3px 0 rgba(0, 0, 0, 0.4); }
+
+.badge.fresh .seal { animation: seal-in 360ms cubic-bezier(0.2, 1.4, 0.4, 1); }
+
+@keyframes seal-in {
+  from { transform: rotate(-6deg) scale(1.9); opacity: 0; }
+  to   { transform: rotate(-6deg) scale(1); opacity: 1; }
+}
+
+.new-badges {
+  margin-top: 12px;
+  font-size: 13.5px;
+  color: var(--hay);
+}
+
+/* ---------- toasts ---------- */
+
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(340px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 11px 16px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4), 0 16px 32px -12px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 220ms ease, transform 260ms cubic-bezier(0.2, 1.2, 0.4, 1);
+}
+
+.toast.show { opacity: 1; transform: none; }
+
+.toast-text { display: grid; gap: 1px; }
+
+.toast-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.toast-name {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
 /* ---------- foot ---------- */
 
 .foot {
   margin-top: 44px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
   font-family: var(--mono);
@@ -503,6 +740,86 @@ main, .masthead, .foot { width: min(640px, 100%); }
 }
 
 .foot a { color: var(--card); }
+
+.field-picker { position: relative; }
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream-soft);
+  cursor: pointer;
+}
+
+.theme-label {
+  border-bottom: 1px dashed var(--cream-faint);
+  padding-bottom: 2px;
+}
+
+.theme-toggle:hover { color: var(--card); }
+
+.theme-toggle:hover .theme-label { border-bottom-color: var(--cream-soft); }
+
+/* a miniature of the design itself: a card on the field */
+.chip {
+  position: relative;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.chip-leaf {
+  position: absolute;
+  inset: 4px;
+  border-radius: 2px;
+}
+
+.theme-menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  min-width: 200px;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4), 0 14px 32px -10px rgba(0, 0, 0, 0.6);
+  text-align: left;
+}
+
+.theme-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.theme-menu button:hover { background: var(--card-shade); }
+
+.theme-menu button.selected::after {
+  content: "✓";
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--hay-deep);
+}
 
 /* ---------- small screens ---------- */
 
@@ -518,4 +835,6 @@ main, .masthead, .foot { width: min(640px, 100%); }
   .animal, .primary { transition: none; }
   .animal:hover:not(:disabled) { transform: none; }
   .drop { animation: none; }
+  .badge.fresh .seal { animation: none; }
+  .toast { transition: opacity 220ms ease; transform: none; }
 }

@@ -30,50 +30,89 @@ function reverseDigits(n) {
 
 /* ---------- the roster ----------
    Effects run against { score, stash, nextTimes } plus a context
-   { pos, len, prev }. An animal sent through with times > 1 has its
-   effect executed that many times back to back, so doublers compound. */
+   { pos, len, prev, line }. An animal sent through with times > 1 has its
+   effect executed that many times back to back, so doublers compound.
+
+   Every animal also carries its make: legs, eyes, whether it is winged and
+   whether it swims. Some powers read those off the whole line, so who you
+   send through matters as much as the order. */
 
 const LINE_SIZE = 5;
 const PEN_SIZE = 7;
 const RUNS = 3;
 
+const tally = (line, of) => line.reduce((n, a) => n + of(a), 0);
+
 const ANIMALS = [
-  { id: 'elephant', emoji: '\u{1F418}', name: 'Elephant',
+  { id: 'elephant', emoji: '\u{1F418}', name: 'Elephant', legs: 4, eyes: 2,
     power: 'Adds 30 to the score.',
     act(s) { s.score += 30; } },
-  { id: 'rabbit', emoji: '\u{1F407}', name: 'Rabbit',
+  { id: 'rabbit', emoji: '\u{1F407}', name: 'Rabbit', legs: 4, eyes: 2,
     power: 'Doubles the score.',
     act(s) { s.score *= 2; } },
-  { id: 'fox', emoji: '\u{1F98A}', name: 'Fox',
+  { id: 'fox', emoji: '\u{1F98A}', name: 'Fox', legs: 4, eyes: 2,
     power: 'The next animal in line acts twice.',
     act(s) { s.nextTimes += 1; } },
-  { id: 'parrot', emoji: '\u{1F99C}', name: 'Parrot',
+  { id: 'parrot', emoji: '\u{1F99C}', name: 'Parrot', legs: 2, eyes: 2, wings: true,
     power: 'Repeats the power of the animal before it.',
     act(s, ctx) { if (ctx.prev) ctx.prev.act(s, ctx); } },
-  { id: 'owl', emoji: '\u{1F989}', name: 'Owl',
+  { id: 'owl', emoji: '\u{1F989}', name: 'Owl', legs: 2, eyes: 2, wings: true,
     power: 'Adds 10 for every animal after it in line.',
     act(s, ctx) { s.score += 10 * (ctx.len - 1 - ctx.pos); } },
-  { id: 'snake', emoji: '\u{1F40D}', name: 'Snake',
+  { id: 'snake', emoji: '\u{1F40D}', name: 'Snake', legs: 0, eyes: 2,
     power: 'Reverses the digits of the score.',
     act(s) { s.score = reverseDigits(s.score); } },
-  { id: 'frog', emoji: '\u{1F438}', name: 'Frog',
+  { id: 'frog', emoji: '\u{1F438}', name: 'Frog', legs: 4, eyes: 2, water: true,
     power: 'Adds 25 if the score is even, 5 if odd.',
     act(s) { s.score += s.score % 2 === 0 ? 25 : 5; } },
-  { id: 'mouse', emoji: '\u{1F42D}', name: 'Mouse',
+  { id: 'mouse', emoji: '\u{1F42D}', name: 'Mouse', legs: 4, eyes: 2,
     power: 'Adds 45 if it leads the line, otherwise 5.',
     act(s, ctx) { s.score += ctx.pos === 0 ? 45 : 5; } },
-  { id: 'tortoise', emoji: '\u{1F422}', name: 'Tortoise',
+  { id: 'tortoise', emoji: '\u{1F422}', name: 'Tortoise', legs: 4, eyes: 2,
     power: 'Doubles the score if it ends the line, otherwise adds 8.',
     act(s, ctx) { if (ctx.pos === ctx.len - 1) s.score *= 2; else s.score += 8; } },
-  { id: 'bee', emoji: '\u{1F41D}', name: 'Bee',
+  { id: 'bee', emoji: '\u{1F41D}', name: 'Bee', legs: 6, eyes: 5, wings: true,
     power: "Adds the score's last digit to the score.",
     act(s) { s.score += s.score % 10; } },
-  { id: 'squirrel', emoji: '\u{1F43F}\u{FE0F}', name: 'Squirrel',
+  { id: 'squirrel', emoji: '\u{1F43F}\u{FE0F}', name: 'Squirrel', legs: 4, eyes: 2,
     power: 'Stashes half the score; the stash comes back after the run.',
     act(s) { const h = Math.floor(s.score / 2); s.stash += h; s.score -= h; } },
-  { id: 'wolf', emoji: '\u{1F43A}', name: 'Wolf',
+  { id: 'wolf', emoji: '\u{1F43A}', name: 'Wolf', legs: 4, eyes: 2,
     power: 'Adds 12 for every animal before it in line.',
     act(s, ctx) { s.score += 12 * ctx.pos; } },
+
+  /* the makeweights: powers that read the whole line */
+
+  { id: 'duck', emoji: '\u{1F986}', name: 'Duck', legs: 2, eyes: 2, wings: true, water: true,
+    power: 'Adds 20 for every winged animal in the line, itself included.',
+    act(s, ctx) { s.score += 20 * tally(ctx.line, (a) => (a.wings ? 1 : 0)); } },
+  { id: 'penguin', emoji: '\u{1F427}', name: 'Penguin', legs: 2, eyes: 2, wings: true, water: true,
+    power: 'Adds 18 for every swimmer in the line, itself included.',
+    act(s, ctx) { s.score += 18 * tally(ctx.line, (a) => (a.water ? 1 : 0)); } },
+  { id: 'whale', emoji: '\u{1F433}', name: 'Whale', legs: 0, eyes: 2, water: true,
+    power: 'Adds 70 if nothing else in the line swims, otherwise 20.',
+    act(s, ctx) { s.score += tally(ctx.line, (a) => (a.water ? 1 : 0)) === 1 ? 70 : 20; } },
+  { id: 'crab', emoji: '\u{1F980}', name: 'Crab', legs: 8, eyes: 2, water: true,
+    power: 'Adds 3 for every leg in the line.',
+    act(s, ctx) { s.score += 3 * tally(ctx.line, (a) => a.legs); } },
+  { id: 'ant', emoji: '\u{1F41C}', name: 'Ant', legs: 6, eyes: 2,
+    power: 'Adds 3 for every leg ahead of it in line.',
+    act(s, ctx) { s.score += 3 * tally(ctx.line.slice(0, ctx.pos), (a) => a.legs); } },
+  { id: 'spider', emoji: '\u{1F577}\u{FE0F}', name: 'Spider', legs: 8, eyes: 8,
+    power: 'Adds 5 for every eye in the line.',
+    act(s, ctx) { s.score += 5 * tally(ctx.line, (a) => a.eyes); } },
+  { id: 'peacock', emoji: '\u{1F99A}', name: 'Peacock', legs: 2, eyes: 2, wings: true,
+    power: 'Adds 8 for every eye behind it in line.',
+    act(s, ctx) { s.score += 8 * tally(ctx.line.slice(ctx.pos + 1), (a) => a.eyes); } },
+  { id: 'stag', emoji: '\u{1F98C}', name: 'Stag', legs: 4, eyes: 2,
+    power: 'Adds 14 for every four-legged animal in the line.',
+    act(s, ctx) { s.score += 14 * tally(ctx.line, (a) => (a.legs === 4 ? 1 : 0)); } },
+  { id: 'bat', emoji: '\u{1F987}', name: 'Bat', legs: 2, eyes: 2, wings: true,
+    power: 'Doubles the score if the animal before it is winged, otherwise adds 10.',
+    act(s, ctx) { if (ctx.prev && ctx.prev.wings) s.score *= 2; else s.score += 10; } },
+  { id: 'octopus', emoji: '\u{1F419}', name: 'Octopus', legs: 8, eyes: 2, water: true,
+    power: 'Repeats the power of the animal two places before it.',
+    act(s, ctx) { const a = ctx.line[ctx.pos - 2]; if (a) a.act(s, ctx); } },
 ];
 
 const BY_ID = Object.fromEntries(ANIMALS.map((a) => [a.id, a]));
@@ -83,13 +122,14 @@ const BY_ID = Object.fromEntries(ANIMALS.map((a) => [a.id, a]));
 function playLineup(ids, start) {
   const s = { score: start, stash: 0, nextTimes: 1 };
   const steps = [];
+  const line = ids.map((id) => BY_ID[id]);
   ids.forEach((id, pos) => {
     const a = BY_ID[id];
     const times = s.nextTimes;
     s.nextTimes = 1;
     const before = s.score;
     const stashBefore = s.stash;
-    const ctx = { pos, len: ids.length, prev: pos > 0 ? BY_ID[ids[pos - 1]] : null };
+    const ctx = { pos, len: ids.length, prev: pos > 0 ? line[pos - 1] : null, line };
     for (let t = 0; t < times; t++) a.act(s, ctx);
     steps.push({ id, times, before, after: s.score, stashed: s.stash - stashBefore });
   });
@@ -141,13 +181,30 @@ function percentBeaten(score, scores) {
 
 /* ---------- deterministic daily pen ----------
    Rejects flat or giveaway days: the perfect run has to be worth
-   hunting for and rare enough that order genuinely matters. */
+   hunting for and rare enough that order genuinely matters.
+
+   An animal whose power counts its own kind also needs company in the
+   pen, or it is dead weight the moment it is drawn. Gating only the
+   animals that care keeps the draw itself even. */
+
+const NEEDS_COMPANY = {
+  duck: (pen) => pen.filter((a) => a.wings).length >= 2,
+  bat: (pen) => pen.filter((a) => a.wings).length >= 2,
+  penguin: (pen) => pen.filter((a) => a.water).length >= 2,
+  stag: (pen) => pen.filter((a) => a.legs === 4).length >= 2,
+};
+
+function penIsFair(ids) {
+  const pen = ids.map((id) => BY_ID[id]);
+  return ids.every((id) => !NEEDS_COMPANY[id] || NEEDS_COMPANY[id](pen));
+}
 
 function generatePuzzle(dayIndex) {
-  for (let attempt = 0; attempt < 50; attempt++) {
+  for (let attempt = 0; attempt < 400; attempt++) {
     const rng = mulberry32(((dayIndex + 1) * 2654435761) ^ (attempt * 40503 + 17));
     const start = 5 + Math.floor(rng() * 25);
     const pen = shuffle(ANIMALS.map((a) => a.id), rng).slice(0, PEN_SIZE);
+    if (!penIsFair(pen)) continue;
     const sol = solve(pen, start);
     const median = sol.scores[sol.scores.length >> 1];
     if (sol.best < 150) continue;
@@ -186,9 +243,61 @@ function rate(best, optimal) {
   return { paws: 1, pct, name: 'Lost sheep' };
 }
 
+/* ---------- commendations ----------
+   Earnable badges, judged against a summary of a finished day:
+   { played, streak, perfects, pct, paws, runs, beaten, climbing, menagerie }. */
+
+const BADGES = [
+  { id: 'first-light', seal: 'No1', name: 'First Light',
+    desc: 'Herd your first day.',
+    test: (c) => c.played >= 1 },
+  { id: 'good-dog', seal: '75', name: 'Good Dog',
+    desc: 'Take three paws or better.',
+    test: (c) => c.paws >= 3 },
+  { id: 'prize-herd', seal: '90', name: 'Prize Herd',
+    desc: 'Finish within a tenth of the perfect run.',
+    test: (c) => c.pct >= 90 },
+  { id: 'best-in-show', seal: 'MAX', name: 'Best in Show',
+    desc: "Find the day's perfect run.",
+    test: (c) => c.pct >= 100 },
+  { id: 'straight-through', seal: '1st', name: 'Straight Through',
+    desc: 'Find the perfect run on your very first run.',
+    test: (c) => c.pct >= 100 && c.runs === 1 },
+  { id: 'called-early', seal: '2/3', name: 'Called It Early',
+    desc: 'Take four paws with a run still in hand.',
+    test: (c) => c.paws >= 4 && c.runs < RUNS },
+  { id: 'reading-the-field', seal: '↗', name: 'Reading the Field',
+    desc: 'Score higher on every run of a full three.',
+    test: (c) => c.climbing },
+  { id: 'long-odds', seal: '99', name: 'Long Odds',
+    desc: 'Beat 99% of all 2,520 possible line-ups.',
+    test: (c) => c.beaten >= 99 },
+  { id: 'regular-round', seal: '3d', name: 'Regular Round',
+    desc: 'Herd three days running.',
+    test: (c) => c.streak >= 3 },
+  { id: 'drovers-week', seal: '7d', name: "Drover's Week",
+    desc: 'Herd seven days running.',
+    test: (c) => c.streak >= 7 },
+  { id: 'shepherds-month', seal: '30', name: "Shepherd's Month",
+    desc: 'Herd thirty days running.',
+    test: (c) => c.streak >= 30 },
+  { id: 'year-of-the-herd', seal: '1yr', name: 'Year of the Herd',
+    desc: 'Herd a full year running.',
+    test: (c) => c.streak >= 365 },
+  { id: 'sharp-eye', seal: '5×', name: 'Sharp Eye',
+    desc: 'Find five perfect runs in all.',
+    test: (c) => c.perfects >= 5 },
+  { id: 'whole-menagerie', seal: `${ANIMALS.length}`, name: 'The Whole Menagerie',
+    desc: `Send all ${ANIMALS.length} animals through the gate.`,
+    test: (c) => c.menagerie },
+  { id: 'hundred-herds', seal: '100', name: 'Hundred Herds',
+    desc: 'Herd one hundred days in all.',
+    test: (c) => c.played >= 100 },
+];
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    ANIMALS, BY_ID, LINE_SIZE, PEN_SIZE, RUNS,
+    ANIMALS, BY_ID, LINE_SIZE, PEN_SIZE, RUNS, BADGES,
     mulberry32, shuffle, reverseDigits,
     playLineup, solve, percentBeaten, generatePuzzle, rate,
     todayIndex, msToMidnight, EPOCH,
@@ -204,6 +313,9 @@ if (typeof document !== 'undefined') (function () {
 
   const DAY_KEY = 'herded-day-v1';
   const STATS_KEY = 'herded-stats-v1';
+  const BADGES_KEY = 'herded-badges-v1';
+  const SEEN_KEY = 'herded-seen-v1';
+  const THEME_KEY = 'herded-theme-v1';
 
   const params = new URLSearchParams(location.search);
   const today = todayIndex();
@@ -263,6 +375,98 @@ if (typeof document !== 'undefined') (function () {
     return stats;
   }
 
+  /* ---------- commendations ---------- */
+
+  function loadBadges() {
+    return load(BADGES_KEY) || {};
+  }
+
+  function recordSeen() {
+    const seen = new Set(load(SEEN_KEY) || []);
+    for (const r of state.runs) for (const id of r.lineup) seen.add(id);
+    const list = [...seen];
+    localStorage.setItem(SEEN_KEY, JSON.stringify(list));
+    return list;
+  }
+
+  // Idempotent, so replaying a saved finished day awards nothing twice.
+  function awardBadges(stats, rating, beaten) {
+    if (archive) return;
+    const totals = state.runs.map((r) => r.total);
+    const ctx = {
+      played: stats.played,
+      streak: stats.streak,
+      perfects: stats.perfects,
+      pct: rating.pct,
+      paws: rating.paws,
+      runs: totals.length,
+      beaten,
+      climbing: totals.length === RUNS && totals.every((t, i) => i === 0 || t > totals[i - 1]),
+      menagerie: recordSeen().length >= ANIMALS.length,
+    };
+    const earned = loadBadges();
+    const fresh = [];
+    for (const b of BADGES) {
+      if (!(b.id in earned) && b.test(ctx)) {
+        earned[b.id] = day;
+        fresh.push(b);
+      }
+    }
+    if (fresh.length) {
+      localStorage.setItem(BADGES_KEY, JSON.stringify(earned));
+      fresh.forEach(queueToast);
+    }
+  }
+
+  /* ---------- toasts ---------- */
+
+  const toastQueue = [];
+  let toastShowing = false;
+
+  function queueToast(badge) {
+    toastQueue.push(badge);
+    if (!toastShowing) nextToast();
+  }
+
+  function nextToast() {
+    const b = toastQueue.shift();
+    if (!b) { toastShowing = false; return; }
+    toastShowing = true;
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML =
+      `<span class="seal">${b.seal}</span>` +
+      '<span class="toast-text">' +
+      '<span class="toast-eyebrow">Commendation earned</span>' +
+      `<span class="toast-name">${b.name}</span></span>`;
+    $('#toasts').appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => { el.remove(); nextToast(); }, 300);
+    }, 3800);
+  }
+
+  function renderBadges() {
+    const earned = loadBadges();
+    $('#badgeCount').textContent = `${Object.keys(earned).length} of ${BADGES.length}`;
+    const ul = $('#badgeList');
+    ul.innerHTML = '';
+    for (const b of BADGES) {
+      const got = b.id in earned;
+      const li = document.createElement('li');
+      li.className = 'badge' + (got ? ' earned' : '')
+        + (!archive && earned[b.id] === day ? ' fresh' : '');
+      li.innerHTML =
+        `<span class="seal">${b.seal}</span>` +
+        '<span class="badge-text">' +
+        `<span class="badge-name">${b.name}</span>` +
+        `<span class="badge-desc">${got ? `${b.desc} Earned No. ${earned[b.id] + 1}.` : b.desc}</span>` +
+        '</span>';
+      ul.appendChild(li);
+    }
+  }
+
   /* ---------- rendering ---------- */
 
   const penEl = $('#pen');
@@ -277,6 +481,13 @@ if (typeof document !== 'undefined') (function () {
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  function traitLine(a) {
+    const bits = [a.legs === 0 ? 'no legs' : `${a.legs} legs`, `${a.eyes} eyes`];
+    if (a.wings) bits.push('winged');
+    if (a.water) bits.push('swims');
+    return bits.join(' · ');
+  }
+
   function renderPen() {
     penEl.innerHTML = '';
     for (const id of puzzle.pen) {
@@ -290,7 +501,8 @@ if (typeof document !== 'undefined') (function () {
       btn.innerHTML =
         `<span class="animal-face">${a.emoji}</span>` +
         `<span class="animal-name">${a.name}</span>` +
-        `<span class="animal-power">${a.power}</span>`;
+        `<span class="animal-power">${a.power}</span>` +
+        `<span class="animal-traits">${traitLine(a)}</span>`;
       btn.addEventListener('click', () => {
         state.lineup.push(id);
         render();
@@ -445,6 +657,15 @@ if (typeof document !== 'undefined') (function () {
     $('#statAvg').textContent = stats.played ? Math.round(stats.totalPct / stats.played) + '%' : '—';
     $('#dayStats').hidden = archive;
 
+    awardBadges(stats, rating, beaten);
+    const earned = loadBadges();
+    const fresh = archive ? [] : BADGES.filter((b) => earned[b.id] === day);
+    $('#newBadges').hidden = fresh.length === 0;
+    $('#newBadges').textContent = fresh.length
+      ? `New commendation${fresh.length === 1 ? '' : 's'}: ${fresh.map((b) => b.name).join(' · ')}`
+      : '';
+    renderBadges();
+
     resultsEl.hidden = false;
     resultsEl.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
   }
@@ -488,6 +709,92 @@ if (typeof document !== 'undefined') (function () {
     }
   });
 
+  /* ---------- the field you play on ---------- */
+
+  const THEMES = [
+    { id: '', name: 'Dusk pasture', field: '#251c10', card: '#f4ecd7' },
+    { id: 'meadow', name: 'Meadow', field: '#dbe6c6', card: '#fbf8ec' },
+    { id: 'hayloft', name: 'Hayloft', field: '#e7d7a9', card: '#fdf9ee' },
+    { id: 'moorland', name: 'Moorland', field: '#2a2434', card: '#f0ecf4' },
+    { id: 'frostfield', name: 'Frostfield', field: '#dee7e9', card: '#fbfcfa' },
+    { id: 'midnight', name: 'Midnight barn', field: '#0e1113', card: '#1b2124' },
+  ];
+
+  let themeId = localStorage.getItem(THEME_KEY) || '';
+  if (!THEMES.some((t) => t.id === themeId)) themeId = '';
+
+  const themeBtn = $('#theme');
+  const themeMenu = $('#themeMenu');
+
+  function themeChip(t) {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.style.background = t.field;
+    const leaf = document.createElement('span');
+    leaf.className = 'chip-leaf';
+    leaf.style.background = t.card;
+    chip.appendChild(leaf);
+    return chip;
+  }
+
+  function applyTheme() {
+    if (themeId) document.documentElement.dataset.theme = themeId;
+    else delete document.documentElement.dataset.theme;
+    const label = document.createElement('span');
+    label.className = 'theme-label';
+    label.textContent = 'Field';
+    themeBtn.innerHTML = '';
+    themeBtn.append(themeChip(THEMES.find((t) => t.id === themeId)), label);
+  }
+
+  function closeThemeMenu() {
+    themeMenu.hidden = true;
+    themeBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  function renderThemeMenu() {
+    themeMenu.innerHTML = '';
+    for (const t of THEMES) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('role', 'option');
+      b.setAttribute('aria-selected', String(t.id === themeId));
+      if (t.id === themeId) b.classList.add('selected');
+      const name = document.createElement('span');
+      name.textContent = t.name;
+      b.append(themeChip(t), name);
+      b.addEventListener('click', () => {
+        themeId = t.id;
+        localStorage.setItem(THEME_KEY, themeId);
+        applyTheme();
+        closeThemeMenu();
+      });
+      themeMenu.appendChild(b);
+    }
+  }
+
+  themeBtn.addEventListener('click', () => {
+    if (themeMenu.hidden) {
+      renderThemeMenu();
+      themeMenu.hidden = false;
+      themeBtn.setAttribute('aria-expanded', 'true');
+    } else {
+      closeThemeMenu();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!themeMenu.hidden && !themeMenu.contains(e.target) && !themeBtn.contains(e.target)) {
+      closeThemeMenu();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeThemeMenu();
+  });
+
+  applyTheme();
+
   /* ---------- wiring ---------- */
 
   runBtn.addEventListener('click', releaseHerd);
@@ -508,6 +815,7 @@ if (typeof document !== 'undefined') (function () {
   });
   $('#archiveNote').hidden = !archive;
   $('#startScore').textContent = puzzle.start;
+  renderBadges();
 
   function tickClock() {
     const ms = msToMidnight();
