@@ -110,7 +110,10 @@ eq(total(['dragon', 'pegasus'], 10), 51, 'pegasus elsewhere adds 6');
 eq(total(['dragon', 'kraken'], 10), 90, 'kraken ending doubles');
 eq(total(['dragon', 'minotaur'], 10), 59, 'minotaur counts creatures before it');
 eq(total(['griffin', 'hydra'], 10), 40, 'griffin makes the hydra double twice');
-eq(total(['hydra', 'echo'], 10), 40, 'echo repeats the hydra');
+eq(total(['hydra', 'chimera'], 10), 40, 'chimera repeats the hydra');
+eq(total(['cockatrice'], 10), 40, 'cockatrice on an even score');
+eq(total(['cockatrice'], 11), 17, 'cockatrice on an odd score');
+eq(total(['harpy'], 47), 54, 'harpy adds the last digit');
 {
   const r = playLineup(['cerberus'], 15);
   eq(r.steps[0].after, 8, 'cerberus guards half the score');
