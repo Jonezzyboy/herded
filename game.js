@@ -110,7 +110,7 @@ const MYTH = [
   { id: 'janus', emoji: '\u{1F5FF}', name: 'Janus',
     power: 'Adds 30 if the score is even, 6 if odd.',
     act(s) { s.score += s.score % 2 === 0 ? 30 : 6; } },
-  { id: 'atlas', emoji: '\u{1F3DB}\u{FE0F}', name: 'Atlas',
+  { id: 'pegasus', emoji: '\u{1F40E}', name: 'Pegasus',
     power: 'Adds 50 if it leads the line, otherwise 6.',
     act(s, ctx) { s.score += ctx.pos === 0 ? 50 : 6; } },
   { id: 'kraken', emoji: '\u{1F419}', name: 'Kraken',
