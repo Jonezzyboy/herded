@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herded — the daily animal line-up</title>
+<meta name="description" content="Seven animals in the pen, five through the gate. Every animal bends the score its own way — find the order that makes the most of them. A fresh herd every day.">
+<link rel="canonical" href="https://jonezzyboy.github.io/herded/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐾</text></svg>">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2790049582805492"
+     crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Figtree:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <h1 class="wordmark">Herded<span class="stop">.</span></h1>
+  <p class="meta"><span id="issue">No. —</span> · <span id="date"></span></p>
+  <p class="archive-note" id="archiveNote" hidden>
+    A past herd, replayed for practice — streaks and stats unaffected.
+    <a href=".">Back to today's</a>
+  </p>
+  <p class="tagline">Seven animals in the pen. Five go through the gate.
+    Every one bends the score its own way — order is everything.</p>
+  <details class="rules">
+    <summary>How to play</summary>
+    <div class="rules-body">
+      <ol class="rules-steps">
+        <li>The score starts small. Send five of the seven animals through
+          the gate, one after another, and each works its power on the score
+          in turn.</li>
+        <li>Powers tangle: a fox makes the next animal act twice, a parrot
+          copies the one before it, a tortoise only doubles if it goes last.
+          Which five you pick — and the order you send them — decides everything.</li>
+        <li>You get three runs at it. Your best run counts, measured against
+          the day's one perfect run. Everyone herds the same animals.</li>
+      </ol>
+    </div>
+  </details>
+</header>
+
+<main>
+  <section class="board" id="board">
+    <div class="scoreline">
+      <p class="start-score">The score sets out at <b id="startScore">—</b></p>
+      <p class="run-marks" id="runMarks" aria-label="Runs used"></p>
+    </div>
+
+    <ol class="gates" id="gates" aria-label="The line, first to last"></ol>
+
+    <div class="pen" id="pen" aria-label="The pen"></div>
+
+    <div class="actions">
+      <button type="button" class="ghost" id="clear" hidden>Empty the line</button>
+      <button type="button" class="primary" id="run" disabled>Release the herd</button>
+    </div>
+  </section>
+
+  <section class="ledger" id="ledger" hidden aria-live="polite"></section>
+
+  <div class="after-run" id="afterRun" hidden>
+    <button type="button" class="primary" id="again">Herd again</button>
+    <button type="button" class="ghost" id="done">Call it a day</button>
+  </div>
+
+  <section class="results" id="results" hidden>
+    <p class="rosette" id="rosette" aria-hidden="true"></p>
+    <h2 class="rating-name" id="ratingName"></h2>
+    <p class="final-line">Your best run <b id="finalScore">—</b> · the perfect run <b id="finalOptimal">—</b></p>
+    <p class="rating-pct" id="ratingPct"></p>
+
+    <div class="result-actions">
+      <button type="button" class="primary" id="share">Share result</button>
+    </div>
+
+    <dl class="stats" id="dayStats">
+      <div><dt>Herded</dt><dd id="statPlayed">0</dd></div>
+      <div><dt>Streak</dt><dd id="statStreak">0</dd></div>
+      <div><dt>Perfect runs</dt><dd id="statPerfects">0</dd></div>
+      <div><dt>Average</dt><dd id="statAvg">—</dd></div>
+    </dl>
+
+    <p class="clock-line">A fresh herd at midnight — <b id="clock">—</b></p>
+  </section>
+</main>
+
+<footer class="foot">
+  <a href="https://jonezzyboy.github.io/">jonezzyboy*</a>
+  <span>same herd for everyone, everywhere</span>
+</footer>
+
+<script src="game.js"></script>
+</body>
+</html>

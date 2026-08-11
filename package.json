@@ -1,0 +1,13 @@
+{
+  "name": "herded",
+  "version": "1.0.0",
+  "description": "Seven animals in the pen, five through the gate. Order is everything. A fresh herd every day.",
+  "private": true,
+  "scripts": {
+    "start": "serve -l 8000 .",
+    "test": "node test/engine.test.js && node test/solver.test.js && node test/generator.test.js"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}
