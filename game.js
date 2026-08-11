@@ -30,89 +30,50 @@ function reverseDigits(n) {
 
 /* ---------- the roster ----------
    Effects run against { score, stash, nextTimes } plus a context
-   { pos, len, prev, line }. An animal sent through with times > 1 has its
-   effect executed that many times back to back, so doublers compound.
-
-   Every animal also carries its make: legs, eyes, whether it is winged and
-   whether it swims. Some powers read those off the whole line, so who you
-   send through matters as much as the order. */
+   { pos, len, prev }. An animal sent through with times > 1 has its
+   effect executed that many times back to back, so doublers compound. */
 
 const LINE_SIZE = 5;
 const PEN_SIZE = 7;
 const RUNS = 3;
 
-const tally = (line, of) => line.reduce((n, a) => n + of(a), 0);
-
 const ANIMALS = [
-  { id: 'elephant', emoji: '\u{1F418}', name: 'Elephant', legs: 4, eyes: 2,
+  { id: 'elephant', emoji: '\u{1F418}', name: 'Elephant',
     power: 'Adds 30 to the score.',
     act(s) { s.score += 30; } },
-  { id: 'rabbit', emoji: '\u{1F407}', name: 'Rabbit', legs: 4, eyes: 2,
+  { id: 'rabbit', emoji: '\u{1F407}', name: 'Rabbit',
     power: 'Doubles the score.',
     act(s) { s.score *= 2; } },
-  { id: 'fox', emoji: '\u{1F98A}', name: 'Fox', legs: 4, eyes: 2,
+  { id: 'fox', emoji: '\u{1F98A}', name: 'Fox',
     power: 'The next animal in line acts twice.',
     act(s) { s.nextTimes += 1; } },
-  { id: 'parrot', emoji: '\u{1F99C}', name: 'Parrot', legs: 2, eyes: 2, wings: true,
+  { id: 'parrot', emoji: '\u{1F99C}', name: 'Parrot',
     power: 'Repeats the power of the animal before it.',
     act(s, ctx) { if (ctx.prev) ctx.prev.act(s, ctx); } },
-  { id: 'owl', emoji: '\u{1F989}', name: 'Owl', legs: 2, eyes: 2, wings: true,
+  { id: 'owl', emoji: '\u{1F989}', name: 'Owl',
     power: 'Adds 10 for every animal after it in line.',
     act(s, ctx) { s.score += 10 * (ctx.len - 1 - ctx.pos); } },
-  { id: 'snake', emoji: '\u{1F40D}', name: 'Snake', legs: 0, eyes: 2,
+  { id: 'snake', emoji: '\u{1F40D}', name: 'Snake',
     power: 'Reverses the digits of the score.',
     act(s) { s.score = reverseDigits(s.score); } },
-  { id: 'frog', emoji: '\u{1F438}', name: 'Frog', legs: 4, eyes: 2, water: true,
+  { id: 'frog', emoji: '\u{1F438}', name: 'Frog',
     power: 'Adds 25 if the score is even, 5 if odd.',
     act(s) { s.score += s.score % 2 === 0 ? 25 : 5; } },
-  { id: 'mouse', emoji: '\u{1F42D}', name: 'Mouse', legs: 4, eyes: 2,
+  { id: 'mouse', emoji: '\u{1F42D}', name: 'Mouse',
     power: 'Adds 45 if it leads the line, otherwise 5.',
     act(s, ctx) { s.score += ctx.pos === 0 ? 45 : 5; } },
-  { id: 'tortoise', emoji: '\u{1F422}', name: 'Tortoise', legs: 4, eyes: 2,
+  { id: 'tortoise', emoji: '\u{1F422}', name: 'Tortoise',
     power: 'Doubles the score if it ends the line, otherwise adds 8.',
     act(s, ctx) { if (ctx.pos === ctx.len - 1) s.score *= 2; else s.score += 8; } },
-  { id: 'bee', emoji: '\u{1F41D}', name: 'Bee', legs: 6, eyes: 5, wings: true,
+  { id: 'bee', emoji: '\u{1F41D}', name: 'Bee',
     power: "Adds the score's last digit to the score.",
     act(s) { s.score += s.score % 10; } },
-  { id: 'squirrel', emoji: '\u{1F43F}\u{FE0F}', name: 'Squirrel', legs: 4, eyes: 2,
+  { id: 'squirrel', emoji: '\u{1F43F}\u{FE0F}', name: 'Squirrel',
     power: 'Stashes half the score; the stash comes back after the run.',
     act(s) { const h = Math.floor(s.score / 2); s.stash += h; s.score -= h; } },
-  { id: 'wolf', emoji: '\u{1F43A}', name: 'Wolf', legs: 4, eyes: 2,
+  { id: 'wolf', emoji: '\u{1F43A}', name: 'Wolf',
     power: 'Adds 12 for every animal before it in line.',
     act(s, ctx) { s.score += 12 * ctx.pos; } },
-
-  /* the makeweights: powers that read the whole line */
-
-  { id: 'duck', emoji: '\u{1F986}', name: 'Duck', legs: 2, eyes: 2, wings: true, water: true,
-    power: 'Adds 20 for every winged animal in the line, itself included.',
-    act(s, ctx) { s.score += 20 * tally(ctx.line, (a) => (a.wings ? 1 : 0)); } },
-  { id: 'penguin', emoji: '\u{1F427}', name: 'Penguin', legs: 2, eyes: 2, wings: true, water: true,
-    power: 'Adds 18 for every swimmer in the line, itself included.',
-    act(s, ctx) { s.score += 18 * tally(ctx.line, (a) => (a.water ? 1 : 0)); } },
-  { id: 'whale', emoji: '\u{1F433}', name: 'Whale', legs: 0, eyes: 2, water: true,
-    power: 'Adds 70 if nothing else in the line swims, otherwise 20.',
-    act(s, ctx) { s.score += tally(ctx.line, (a) => (a.water ? 1 : 0)) === 1 ? 70 : 20; } },
-  { id: 'crab', emoji: '\u{1F980}', name: 'Crab', legs: 8, eyes: 2, water: true,
-    power: 'Adds 3 for every leg in the line.',
-    act(s, ctx) { s.score += 3 * tally(ctx.line, (a) => a.legs); } },
-  { id: 'ant', emoji: '\u{1F41C}', name: 'Ant', legs: 6, eyes: 2,
-    power: 'Adds 3 for every leg ahead of it in line.',
-    act(s, ctx) { s.score += 3 * tally(ctx.line.slice(0, ctx.pos), (a) => a.legs); } },
-  { id: 'spider', emoji: '\u{1F577}\u{FE0F}', name: 'Spider', legs: 8, eyes: 8,
-    power: 'Adds 5 for every eye in the line.',
-    act(s, ctx) { s.score += 5 * tally(ctx.line, (a) => a.eyes); } },
-  { id: 'peacock', emoji: '\u{1F99A}', name: 'Peacock', legs: 2, eyes: 2, wings: true,
-    power: 'Adds 8 for every eye behind it in line.',
-    act(s, ctx) { s.score += 8 * tally(ctx.line.slice(ctx.pos + 1), (a) => a.eyes); } },
-  { id: 'stag', emoji: '\u{1F98C}', name: 'Stag', legs: 4, eyes: 2,
-    power: 'Adds 14 for every four-legged animal in the line.',
-    act(s, ctx) { s.score += 14 * tally(ctx.line, (a) => (a.legs === 4 ? 1 : 0)); } },
-  { id: 'bat', emoji: '\u{1F987}', name: 'Bat', legs: 2, eyes: 2, wings: true,
-    power: 'Doubles the score if the animal before it is winged, otherwise adds 10.',
-    act(s, ctx) { if (ctx.prev && ctx.prev.wings) s.score *= 2; else s.score += 10; } },
-  { id: 'octopus', emoji: '\u{1F419}', name: 'Octopus', legs: 8, eyes: 2, water: true,
-    power: 'Repeats the power of the animal two places before it.',
-    act(s, ctx) { const a = ctx.line[ctx.pos - 2]; if (a) a.act(s, ctx); } },
 ];
 
 const BY_ID = Object.fromEntries(ANIMALS.map((a) => [a.id, a]));
@@ -122,14 +83,13 @@ const BY_ID = Object.fromEntries(ANIMALS.map((a) => [a.id, a]));
 function playLineup(ids, start) {
   const s = { score: start, stash: 0, nextTimes: 1 };
   const steps = [];
-  const line = ids.map((id) => BY_ID[id]);
   ids.forEach((id, pos) => {
     const a = BY_ID[id];
     const times = s.nextTimes;
     s.nextTimes = 1;
     const before = s.score;
     const stashBefore = s.stash;
-    const ctx = { pos, len: ids.length, prev: pos > 0 ? line[pos - 1] : null, line };
+    const ctx = { pos, len: ids.length, prev: pos > 0 ? BY_ID[ids[pos - 1]] : null };
     for (let t = 0; t < times; t++) a.act(s, ctx);
     steps.push({ id, times, before, after: s.score, stashed: s.stash - stashBefore });
   });
@@ -181,30 +141,13 @@ function percentBeaten(score, scores) {
 
 /* ---------- deterministic daily pen ----------
    Rejects flat or giveaway days: the perfect run has to be worth
-   hunting for and rare enough that order genuinely matters.
-
-   An animal whose power counts its own kind also needs company in the
-   pen, or it is dead weight the moment it is drawn. Gating only the
-   animals that care keeps the draw itself even. */
-
-const NEEDS_COMPANY = {
-  duck: (pen) => pen.filter((a) => a.wings).length >= 2,
-  bat: (pen) => pen.filter((a) => a.wings).length >= 2,
-  penguin: (pen) => pen.filter((a) => a.water).length >= 2,
-  stag: (pen) => pen.filter((a) => a.legs === 4).length >= 2,
-};
-
-function penIsFair(ids) {
-  const pen = ids.map((id) => BY_ID[id]);
-  return ids.every((id) => !NEEDS_COMPANY[id] || NEEDS_COMPANY[id](pen));
-}
+   hunting for and rare enough that order genuinely matters. */
 
 function generatePuzzle(dayIndex) {
-  for (let attempt = 0; attempt < 400; attempt++) {
+  for (let attempt = 0; attempt < 50; attempt++) {
     const rng = mulberry32(((dayIndex + 1) * 2654435761) ^ (attempt * 40503 + 17));
     const start = 5 + Math.floor(rng() * 25);
     const pen = shuffle(ANIMALS.map((a) => a.id), rng).slice(0, PEN_SIZE);
-    if (!penIsFair(pen)) continue;
     const sol = solve(pen, start);
     const median = sol.scores[sol.scores.length >> 1];
     if (sol.best < 150) continue;
@@ -481,13 +424,6 @@ if (typeof document !== 'undefined') (function () {
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function traitLine(a) {
-    const bits = [a.legs === 0 ? 'no legs' : `${a.legs} legs`, `${a.eyes} eyes`];
-    if (a.wings) bits.push('winged');
-    if (a.water) bits.push('swims');
-    return bits.join(' · ');
-  }
-
   function renderPen() {
     penEl.innerHTML = '';
     for (const id of puzzle.pen) {
@@ -501,8 +437,7 @@ if (typeof document !== 'undefined') (function () {
       btn.innerHTML =
         `<span class="animal-face">${a.emoji}</span>` +
         `<span class="animal-name">${a.name}</span>` +
-        `<span class="animal-power">${a.power}</span>` +
-        `<span class="animal-traits">${traitLine(a)}</span>`;
+        `<span class="animal-power">${a.power}</span>`;
       btn.addEventListener('click', () => {
         state.lineup.push(id);
         render();

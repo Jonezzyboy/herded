@@ -8,14 +8,6 @@ score's digits, squirrels stash half of it for safekeeping. Pick five of the
 day's seven animals and send them through the gate in the order that makes
 the most of them.
 
-Twenty-two animals, and each carries its make — legs, eyes, whether it is winged,
-whether it swims. A second family of powers reads those off the line rather
-than off the score: a duck pays per winged animal, a penguin per swimmer, a crab per
-leg, a spider per eye, a peacock per eye *behind* it, an ant per leg *ahead*
-of it. A whale pays triple for swimming alone. So the line is two puzzles at
-once — which five share the right traits, and what order wrings the most from
-them.
-
 Everyone gets the same pen and the same starting score. You get three runs;
 your best is measured against the day's one perfect run — found by brute
 force over all 2,520 possible lines.
