@@ -390,7 +390,7 @@ const BADGES = [
     desc: 'Herd a day from every pack.',
     test: (c) => c.everyPack },
   { id: 'whole-menagerie', seal: `${ANIMALS.length}`, name: 'The Whole Menagerie',
-    desc: `Send all ${ANIMALS.length} animals through the gate.`,
+    desc: `Send all ${ANIMALS.length} creatures through the gate.`,
     test: (c) => c.menagerie },
   { id: 'hundred-herds', seal: '100', name: 'Hundred Herds',
     desc: 'Herd one hundred days in all.',
