@@ -77,6 +77,7 @@ eq(total(['squirrel', 'tortoise'], 15), 23, 'the stash is never doubled');
 
 /* packs are well formed and never overlap */
 {
+  const { CREATURE_ICONS } = require('../icons.js');
   const seen = new Set();
   for (const p of PACKS) {
     if (p.animals.length < PEN_SIZE) fail(`pack ${p.id} cannot fill a pen of ${PEN_SIZE}`);
@@ -85,6 +86,7 @@ eq(total(['squirrel', 'tortoise'], 15), 23, 'the stash is never doubled');
       seen.add(a.id);
       if (typeof a.act !== 'function') fail(`${a.id} has no effect`);
       if (!a.name || !a.emoji || !a.power) fail(`${a.id} is missing its card copy`);
+      if (!CREATURE_ICONS[a.id] || !CREATURE_ICONS[a.id].length) fail(`${a.id} has no creature mark`);
     }
   }
   eq(seen.size, ANIMALS.length, 'every creature is reachable from a pack');

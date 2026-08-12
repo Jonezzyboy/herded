@@ -59,6 +59,11 @@ Midnight barn — chosen from the picker in the footer and remembered in
   pack; the pen is then seeded from the same number and rejected until it
   passes quality gates (a perfect run worth hunting for, rare enough that
   order genuinely matters, with real branching between outcomes).
+- `icons.js` — one SVG mark per creature (plus the stash sack and the paw),
+  extracted from [game-icons.net](https://game-icons.net/) (CC BY 3.0;
+  artists delapouite, lorc, skoll) and drawn with `currentColor` so they
+  follow every field's ink. Attribution lives in the footer. Each animal
+  keeps its emoji as a fallback for any creature without a mark.
 - No build step, no dependencies. Static files served by GitHub Pages.
 - A past day can be replayed with `?day=N` (No. 1 is `day=0`) — practice
   only, stats untouched.

@@ -57,7 +57,13 @@
 
     <ol class="gates" id="gates" aria-label="The line, first to last"></ol>
 
-    <div class="pen" id="pen" aria-label="The pen"></div>
+    <div class="paddock">
+      <div class="pen-head" aria-hidden="true">
+        <span class="pen-title">The pen</span>
+        <span class="pen-count" id="penCount"></span>
+      </div>
+      <div class="pen" id="pen" aria-label="The pen"></div>
+    </div>
 
     <div class="actions">
       <button type="button" class="ghost" id="clear" hidden>Empty the line</button>
@@ -107,11 +113,13 @@
     <button type="button" id="theme" class="theme-toggle" aria-haspopup="listbox" aria-expanded="false"></button>
     <div id="themeMenu" class="theme-menu" role="listbox" aria-label="Field" hidden></div>
   </div>
-  <span>same herd for everyone, everywhere</span>
+  <span>same herd for everyone, everywhere
+    · creatures from <a href="https://game-icons.net/" rel="external">game-icons.net</a></span>
 </footer>
 
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 
+<script src="icons.js"></script>
 <script src="game.js"></script>
 </body>
 </html>

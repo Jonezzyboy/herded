@@ -414,6 +414,21 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof document !== 'undefined') (function () {
   const $ = (sel) => document.querySelector(sel);
 
+  /* Creature marks live in icons.js (game-icons.net, CC BY 3.0);
+     the emoji on each animal stays as the fallback. */
+  const ICONS = typeof CREATURE_ICONS !== 'undefined' ? CREATURE_ICONS : {};
+
+  function iconMark(id, cls) {
+    const paths = ICONS[id];
+    if (!paths) return null;
+    return `<svg class="${cls}" viewBox="0 0 512 512" aria-hidden="true">` +
+      paths.map((d) => `<path fill="currentColor" d="${d}"/>`).join('') + '</svg>';
+  }
+
+  function faceMark(a, cls) {
+    return iconMark(a.id, cls) || `<span class="${cls}">${a.emoji}</span>`;
+  }
+
   const DAY_KEY = 'herded-day-v1';
   const STATS_KEY = 'herded-stats-v1';
   const BADGES_KEY = 'herded-badges-v1';
@@ -606,9 +621,10 @@ if (typeof document !== 'undefined') (function () {
       btn.disabled = state.revealing || state.finished ||
         inLine || state.lineup.length >= LINE_SIZE;
       btn.innerHTML =
-        `<span class="animal-face">${a.emoji}</span>` +
+        `<span class="animal-plate">${faceMark(a, 'animal-face')}</span>` +
+        '<span class="animal-text">' +
         `<span class="animal-name">${a.name}</span>` +
-        `<span class="animal-power">${a.power}</span>`;
+        `<span class="animal-power">${a.power}</span></span>`;
       btn.addEventListener('click', () => {
         state.lineup.push(id);
         render();
@@ -629,7 +645,7 @@ if (typeof document !== 'undefined') (function () {
         btn.className = 'gate-pick';
         btn.disabled = state.revealing || state.finished;
         btn.title = `Send ${a.name} back to the pen`;
-        btn.innerHTML = `<span class="gate-face">${a.emoji}</span><span class="gate-name">${a.name}</span>`;
+        btn.innerHTML = `${faceMark(a, 'gate-face')}<span class="gate-name">${a.name}</span>`;
         btn.addEventListener('click', () => {
           state.lineup.splice(i, 1);
           render();
@@ -658,8 +674,12 @@ if (typeof document !== 'undefined') (function () {
     renderPen();
     renderGates();
     renderRuns();
-    runBtn.disabled = state.lineup.length !== LINE_SIZE || state.revealing || state.finished;
-    clearBtn.hidden = state.lineup.length === 0 || state.revealing || state.finished;
+    const picked = state.lineup.length;
+    $('#penCount').textContent = state.finished ? 'closed for the day'
+      : picked === 0 ? `pick ${LINE_SIZE} of ${PEN_SIZE}`
+      : `${picked} of ${LINE_SIZE} in the line`;
+    runBtn.disabled = picked !== LINE_SIZE || state.revealing || state.finished;
+    clearBtn.hidden = picked === 0 || state.revealing || state.finished;
     $('#board').classList.toggle('closed', state.finished);
   }
 
@@ -672,7 +692,7 @@ if (typeof document !== 'undefined') (function () {
     const times = step.times > 1 ? `<span class="times">×${step.times}</span>` : '';
     const stashNote = step.stashed > 0 ? `<span class="stash-note">stashed ${step.stashed}</span>` : '';
     row.innerHTML =
-      `<span class="ledger-animal">${a.emoji} ${a.name}${times}</span>` +
+      `<span class="ledger-animal">${faceMark(a, 'ledger-face')}${a.name}${times}</span>` +
       `${stashNote}<span class="ledger-score">${step.before} → <b>${step.after}</b></span>`;
     return row;
   }
@@ -681,7 +701,7 @@ if (typeof document !== 'undefined') (function () {
     const row = document.createElement('div');
     row.className = 'ledger-row stash-return' + (animate ? ' drop' : '');
     row.innerHTML =
-      `<span class="ledger-animal">\u{1F43F}\u{FE0F} The stash comes back</span>` +
+      `<span class="ledger-animal">${iconMark('stash', 'ledger-face') || '\u{1F43F}\u{FE0F} '}The stash comes back</span>` +
       `<span class="ledger-score">${result.beforeStash} + ${result.stash} → <b>${result.total}</b></span>`;
     return row;
   }
@@ -750,7 +770,9 @@ if (typeof document !== 'undefined') (function () {
 
     $('#finalScore').textContent = best;
     $('#finalOptimal').textContent = optimal;
-    $('#rosette').textContent = '\u{1F43E}'.repeat(rating.paws);
+    const paw = iconMark('paw', 'paw-mark');
+    if (paw) $('#rosette').innerHTML = paw.repeat(rating.paws);
+    else $('#rosette').textContent = '\u{1F43E}'.repeat(rating.paws);
     $('#ratingName').textContent = rating.name;
     $('#ratingPct').textContent =
       rating.pct >= 100
