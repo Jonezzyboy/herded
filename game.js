@@ -635,17 +635,23 @@ if (typeof document !== 'undefined') (function () {
 
   function renderGates() {
     gatesEl.innerHTML = '';
+    // The rail keeps count: the line so far is scored live, so every gate
+    // shows what the score becomes after its creature acts.
+    const preview = state.lineup.length ? playLineup(state.lineup, puzzle.start) : null;
     for (let i = 0; i < LINE_SIZE; i++) {
       const li = document.createElement('li');
       const id = state.lineup[i];
       if (id) {
         const a = BY_ID[id];
+        const step = preview.steps[i];
+        const times = step.times > 1 ? `<b class="gate-times">×${step.times}</b>` : '';
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'gate-pick';
         btn.disabled = state.revealing || state.finished;
         btn.title = `Send ${a.name} back to the pen`;
-        btn.innerHTML = `${faceMark(a, 'gate-face')}<span class="gate-name">${a.name}</span>`;
+        btn.innerHTML = `${faceMark(a, 'gate-face')}<span class="gate-name">${a.name}</span>` +
+          `<span class="gate-score">${times}${step.after}</span>`;
         btn.addEventListener('click', () => {
           state.lineup.splice(i, 1);
           render();
@@ -656,6 +662,12 @@ if (typeof document !== 'undefined') (function () {
         li.textContent = i + 1;
       }
       gatesEl.appendChild(li);
+    }
+    const totalEl = $('#lineTotal');
+    totalEl.hidden = !preview;
+    if (preview) {
+      totalEl.innerHTML = `the line stands at <b>${preview.total}</b>` +
+        (preview.stash > 0 ? ` <span class="stash-note">(stash of ${preview.stash} back in)</span>` : '');
     }
   }
 

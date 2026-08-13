@@ -269,7 +269,7 @@ main, .masthead, .foot { width: min(640px, 100%); }
 
 .gate-empty {
   flex: 1;
-  min-height: 78px;
+  min-height: 92px;
   border: 2px dashed var(--cream-faint);
   border-radius: 10px;
   display: flex;
@@ -282,7 +282,7 @@ main, .masthead, .foot { width: min(640px, 100%); }
 
 .gate-pick {
   flex: 1;
-  min-height: 78px;
+  min-height: 92px;
   border: 0;
   border-radius: 10px;
   background: var(--card);
@@ -313,6 +313,34 @@ span.gate-face { font-size: 26px; line-height: 1; }
   font-weight: 600;
   color: var(--ink-soft);
 }
+
+.gate-score {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--hay-deep);
+}
+
+.gate-times {
+  font-weight: 600;
+  color: var(--poppy);
+  margin-right: 3px;
+}
+
+.line-total {
+  margin-top: 8px;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--cream-soft);
+}
+
+.line-total b {
+  font-size: 16px;
+  color: var(--hay);
+}
+
+.line-total .stash-note { color: var(--cream-soft); }
 
 /* ---------- the pen ---------- */
 
@@ -909,7 +937,8 @@ span.animal-face { font-size: 27px; line-height: 1; }
   svg.gate-face { width: 22px; height: 22px; }
   span.gate-face { font-size: 22px; }
   .gate-name { font-size: 10px; }
-  .gate-empty, .gate-pick { min-height: 66px; }
+  .gate-score { font-size: 11px; }
+  .gate-empty, .gate-pick { min-height: 80px; }
   .stats { grid-template-columns: repeat(2, 1fr); }
 }
 
