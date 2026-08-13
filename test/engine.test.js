@@ -63,17 +63,17 @@ eq(total(['elephant', 'parrot', 'rabbit'], 10), 140, 'parrot uses its own positi
 eq(total(['elephant', 'tortoise', 'parrot'], 10), 96,
   'parrot repeating tortoise at the back doubles');
 
-/* squirrel stash */
+/* squirrel stash — halves round the normal way, so .5 goes up (into the stash) */
 {
   const r = playLineup(['squirrel'], 15);
-  eq(r.steps[0].after, 8, 'squirrel halves the score');
-  eq(r.stash, 7, 'squirrel stashes the difference');
+  eq(r.steps[0].after, 7, 'squirrel halves the score, rounding the stash up');
+  eq(r.stash, 8, 'squirrel stashes the difference');
   eq(r.total, 15, 'stash returns after the run');
 }
-eq(total(['squirrel', 'rabbit'], 15), 23, 'rabbit doubles the unstashed half');
+eq(total(['squirrel', 'rabbit'], 15), 22, 'rabbit doubles the unstashed half');
 eq(total(['rabbit', 'squirrel'], 15), 30, 'stash is safe after the double');
 eq(total(['fox', 'squirrel', 'rabbit'], 20), 25, 'fox makes squirrel stash twice');
-eq(total(['squirrel', 'tortoise'], 15), 23, 'the stash is never doubled');
+eq(total(['squirrel', 'tortoise'], 15), 22, 'the stash is never doubled');
 
 /* packs are well formed and never overlap */
 {
@@ -118,13 +118,14 @@ eq(total(['cockatrice'], 11), 17, 'cockatrice on an odd score');
 eq(total(['harpy'], 47), 54, 'harpy adds the last digit');
 {
   const r = playLineup(['cerberus'], 15);
-  eq(r.steps[0].after, 8, 'cerberus guards half the score');
+  eq(r.steps[0].after, 7, 'cerberus guards half the score, rounded up');
   eq(r.total, 15, 'the guarded half comes back');
 }
 
 /* eldritch */
 eq(total(['star-spawn'], 10), 50, 'star-spawn adds 40');
 eq(total(['the-hollow'], 40), 110, 'the hollow halves then adds 90');
+eq(total(['the-hollow'], 41), 111, 'the hollow rounds a half up');
 eq(total(['the-hollow'], 300), 240, 'the hollow drags a big score down');
 eq(total(['herald'], 10), 65, 'herald leading adds 55');
 eq(total(['watcher', 'star-spawn'], 10), 64, 'watcher counts creatures after it');
