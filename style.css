@@ -875,6 +875,8 @@ span.animal-face { font-size: 27px; line-height: 1; }
 
 .also a { color: var(--on-field); }
 
+.also .done-tick { color: var(--hay); font-weight: 600; }
+
 /* a miniature of the design itself: a card on the field */
 .chip {
   position: relative;

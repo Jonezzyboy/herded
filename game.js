@@ -483,6 +483,7 @@ if (typeof document !== 'undefined') (function () {
 
   function recordFinish(pct) {
     if (archive) return loadStats();
+    markShelf();
     const stats = loadStats();
     if (stats.lastDay === day) return stats;
     stats.played++;
@@ -493,6 +494,38 @@ if (typeof document !== 'undefined') (function () {
     stats.lastDay = day;
     localStorage.setItem(STATS_KEY, JSON.stringify(stats));
     return stats;
+  }
+
+  /* ---------- the daily shelf ----------
+     All three dailies share this origin, so a tiny shared ledger of
+     "finished today" dates lets each game tick off its siblings. */
+
+  const SHELF_KEY = 'dailies-v1';
+  const SHELF_SLUG = 'herded';
+
+  function localDate() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function markShelf() {
+    const shelf = load(SHELF_KEY) || {};
+    shelf[SHELF_SLUG] = localDate();
+    localStorage.setItem(SHELF_KEY, JSON.stringify(shelf));
+  }
+
+  function renderShelfTicks() {
+    const shelf = load(SHELF_KEY) || {};
+    const today = localDate();
+    document.querySelectorAll('.also a[data-daily]').forEach((a) => {
+      if (shelf[a.dataset.daily] === today) {
+        const tick = document.createElement('span');
+        tick.className = 'done-tick';
+        tick.title = 'Played today';
+        tick.textContent = ' ✓';
+        a.after(tick);
+      }
+    });
   }
 
   /* ---------- commendations ---------- */
@@ -812,16 +845,22 @@ if (typeof document !== 'undefined') (function () {
 
   /* ---------- share ---------- */
 
+  // Plain punctuation only — em dashes and middle dots garble in some
+  // messaging apps, so the shared text sticks to ASCII plus emoji.
   function shareText() {
     const rating = rate(bestRun(), optimal);
     const runsUsed = state.runs.length;
-    const lines = [
-      `Herded No. ${day + 1} · ${pack.name} ${'\u{1F43E}'.repeat(rating.paws)}`,
-      rating.pct >= 100
-        ? `The perfect run, in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`
-        : `${rating.pct}% of the perfect run, in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`,
-      'https://jonezzyboy.github.io/herded/',
-    ];
+    const lines = [`\u{1F43E} Herded No. ${day + 1}`];
+    lines.push(rating.pct >= 100
+      ? `The perfect run through ${pack.name}, in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`
+      : `${rating.pct}% of the perfect run through ${pack.name}, in ${runsUsed} run${runsUsed === 1 ? '' : 's'}`);
+    lines.push('\u{1F43E}'.repeat(rating.paws));
+    const s = loadStats();
+    if (!archive && s.streak > 1) lines.push(`\u{1F4C8} ${s.streak} days running`);
+    const earned = loadBadges();
+    const fresh = archive ? [] : BADGES.filter((b) => earned[b.id] === day).map((b) => b.name);
+    if (fresh.length) lines.push(`\u{1F3C5} ${fresh.join(', ')}`);
+    lines.push('', 'https://jonezzyboy.github.io/herded/');
     return lines.join('\n');
   }
 
@@ -957,6 +996,7 @@ if (typeof document !== 'undefined') (function () {
   $('#archiveNote').hidden = !archive;
   $('#startScore').textContent = puzzle.start;
   renderBadges();
+  renderShelfTicks();
 
   function tickClock() {
     const ms = msToMidnight();
