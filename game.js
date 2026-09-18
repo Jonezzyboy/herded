@@ -432,6 +432,7 @@ if (typeof document !== 'undefined') (function () {
   const DAY_KEY = 'herded-day-v1';
   const STATS_KEY = 'herded-stats-v1';
   const BADGES_KEY = 'herded-badges-v1';
+  const HISTORY_KEY = 'herded-history-v1';
   const SEEN_KEY = 'herded-seen-v1';
   const PACKS_KEY = 'herded-packs-v1';
   const THEME_KEY = 'herded-theme-v1';
@@ -494,6 +495,58 @@ if (typeof document !== 'undefined') (function () {
     stats.lastDay = day;
     localStorage.setItem(STATS_KEY, JSON.stringify(stats));
     return stats;
+  }
+
+  /* ---------- past herds ---------- */
+
+  function loadHistory() {
+    const h = load(HISTORY_KEY);
+    return Array.isArray(h) ? h : [];
+  }
+
+  // finish() runs again on every reload of a finished day, so this upserts.
+  function recordHistory(score, pct) {
+    const history = loadHistory();
+    const existing = history.find((h) => h.day === day);
+    if (existing && score <= existing.score) return;
+    if (existing) Object.assign(existing, { score, pct, late: archive });
+    else history.push({ day, score, pct, late: archive });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
+
+  function dateForDay(d) {
+    return new Date(EPOCH.y, EPOCH.m, EPOCH.d + d).toLocaleDateString(undefined, {
+      day: 'numeric', month: 'short', year: 'numeric',
+    });
+  }
+
+  function renderHistory() {
+    $('#history').hidden = today === 0;
+    if (today === 0) return;
+    const byDay = new Map(loadHistory().map((h) => [h.day, h]));
+    const ol = $('#historyLines');
+    ol.innerHTML = '';
+    for (let d = today - 1; d >= 0; d--) {
+      const h = byDay.get(d);
+      const li = document.createElement('li');
+      li.className = [h ? (h.pct >= 100 ? 'perfect' : '') : 'blank',
+        archive && d === day ? 'current' : ''].filter(Boolean).join(' ');
+      const a = document.createElement('a');
+      a.href = `?no=${d + 1}`;
+      a.textContent = `No. ${d + 1} · ${dateForDay(d)}`;
+      const label = document.createElement('span');
+      label.className = 'past-label';
+      label.appendChild(a);
+      const leader = document.createElement('span');
+      leader.className = 'leader';
+      const amt = document.createElement('span');
+      amt.className = 'amt';
+      amt.textContent = h
+        ? `${h.score} · ${h.pct}%${h.late ? ' late' : ''}`
+        : 'not herded';
+      li.append(label, leader, amt);
+      ol.appendChild(li);
+    }
   }
 
   /* ---------- the daily shelf ----------
@@ -812,6 +865,7 @@ if (typeof document !== 'undefined') (function () {
     const rating = rate(best, optimal);
     const beaten = percentBeaten(best, puzzle.solution.scores);
     const stats = recordFinish(rating.pct);
+    recordHistory(best, rating.pct);
 
     $('#finalScore').textContent = best;
     $('#finalOptimal').textContent = optimal;
@@ -838,6 +892,7 @@ if (typeof document !== 'undefined') (function () {
       ? `New commendation${fresh.length === 1 ? '' : 's'}: ${fresh.map((b) => b.name).join(' · ')}`
       : '';
     renderBadges();
+    renderHistory();
 
     resultsEl.hidden = false;
     resultsEl.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
@@ -996,6 +1051,7 @@ if (typeof document !== 'undefined') (function () {
   $('#archiveNote').hidden = !archive;
   $('#startScore').textContent = puzzle.start;
   renderBadges();
+  renderHistory();
   renderShelfTicks();
 
   function tickClock() {

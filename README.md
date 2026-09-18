@@ -65,8 +65,11 @@ Midnight barn — chosen from the picker in the footer and remembered in
   follow every field's ink. Attribution lives in the footer. Each animal
   keeps its emoji as a fallback for any creature without a mark.
 - No build step, no dependencies. Static files served by GitHub Pages.
-- A past day can be replayed with `?day=N` (No. 1 is `day=0`) — practice
-  only, stats untouched.
+- **Past herds** (below the board) lists every day before today, with the
+  score it banked and how close to perfect it came. Each entry links to that
+  day's pen (also `?day=N`, No. 1 is `day=0`) — practice only, with stats,
+  streaks and commendations untouched, though a better line replaces what the
+  day banked and is marked *late*.
 
 ## Running locally
 
